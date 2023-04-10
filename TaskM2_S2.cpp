@@ -20,47 +20,45 @@ void *sum(void *threadid)
     long sum = 0;
     tid = (long)threadid;
 
-    // Specify the data array's processing range for each thread.
+    // Specifing the processing range for every thread in the data array
     int range = MAX / NUM_THREADS;
     int start = tid * range;
     int end = start + range;
 
-    // Calculate the thread's range's sum of the data elements.
+    // Calculates sum of the data elements within range of thread.
     for (int i = start; i < end; i++)
     {
         sum += data[i];
     }
 
-    // Use a mutex lock to ensure that global sum is updated sequentially.
+    // A mutex lock that makes sure global sum is updated in an order.
     pthread_mutex_lock(&mutx);
     global_sum += sum;
-    pthread_mutex_unlock(&mutx);
-    // To enable other threads to access global sum, release the lock.
 
-    //  Exit the thread
+    // Disables the lock
+    pthread_mutex_unlock(&mutx);
+
+    //  Exits the thread
     pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[])
 {
-    // Initialize mutex lock
+    // Starting the mutex lock
     pthread_mutex_init(&mutx, NULL);
 
-    // Determine the number of cores on the machine
+    // To Determine the number of cores
     int cores = std::thread::hardware_concurrency();
     cout << " the number of cores on this machine = " << cores << endl;
 
-    // Initializing data array with random values
+    // Initializes data array with random numbers
     srand(time(NULL));
     for (int i = 0; i < MAX; i++)
     {
         data[i] = rand() % 20;
     }
 
-    // Start the clock
-    clock_t start_time = clock();
-
-    // Create a pool of threads to process the data
+    // Processing data by creating a pool of threads
     pthread_t threads[NUM_THREADS];
     long tid = 0;
     for (tid = 0; tid < NUM_THREADS; tid++)
@@ -68,19 +66,12 @@ int main(int argc, char *argv[])
         pthread_create(&threads[tid], NULL, sum, (void *)tid);
     }
 
-    // Wait for all threads to complete before printing the final sum
+    // Waits for all threads to get finished
     for (tid = 0; tid < NUM_THREADS; tid++)
     {
         pthread_join(threads[tid], NULL);
     }
 
-    // Stop the clock
-    clock_t end_time = clock();
-
-    // Calculate the total execution time
-    double execution_time = double(end_time - start_time) / CLOCKS_PER_SEC;
-
-    // Print the final sum and execution time
-    cout << "the final sum = " << global_sum << endl;
-    cout << "execution time = " << execution_time << " seconds" << endl;
+    // Prints the final sum
+    cout << "the final sum =" << global_sum << endl;
 }
